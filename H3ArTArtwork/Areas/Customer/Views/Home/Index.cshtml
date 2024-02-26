@@ -1,0 +1,127 @@
+﻿@using H3ArT.Models.Models
+@model IEnumerable<Artwork>
+
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+@{
+    var distinctCategories = Model.Select(a => a.category?.categoryName).Distinct().ToList();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Home - Pintereso Bootstrap Template</title>
+    <script type="text/javascript">(function () { var css = document.createElement('link'); css.href = 'https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'; css.rel = 'stylesheet'; css.type = 'text/css'; document.getElementsByTagName('head')[0].appendChild(css); })();</script>
+    <link href="~/css/app.css" rel="stylesheet" />
+    <link href="~/css/theme.css" rel="stylesheet" />
+    
+</head>
+
+
+<body>
+
+    <main role="main">
+
+
+        <section class="mt-4 mb-5">
+            <div class="container mb-4">
+                <h1 class="font-weight-bold title">Explore</h1>
+                <div class="row">
+                    <nav class="navbar navbar-expand-lg navbar-light bg-white pl-2 pr-2">
+                        <button class="navbar-light navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExplore" aria-controls="navbarsDefault" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarsExplore">
+                            <ul class="navbar-nav">
+                                @foreach (var category in distinctCategories.Take(4))
+                                {
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">@category</a>
+                                </li>
+                                }
+                                @if (distinctCategories.Count() > 4)
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+                                        <div class="dropdown-menu shadow-lg" aria-labelledby="dropdown01">
+                                            @foreach (var category in distinctCategories.Skip(4))
+                                            {
+                                            <a class="dropdown-item" href="#">@category</a>
+                                            }
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="card-columns">
+                        @foreach(var artwork in Model)
+                        {
+                            
+                        <div class="card card-pin">
+                            <img class="card-img" src="@artwork.imageUrl" alt="Card image">
+                            <div class="overlay">
+                                <h2 class="card-title title">@artwork.title</h2>
+                                <div class="more">
+                                    <a asp-action="Details" asp-route-artworkId="@artwork.artworkId">
+                                        <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="~/js/app.js"></script>
+    <script src="~/js/theme.js"></script>
+    <footer class="footer pt-5 pb-5 text-center">
+
+        <div class="container">
+
+            <div class="socials-media">
+
+                <ul class="list-unstyled">
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-facebook"></i></a></li>
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-twitter"></i></a></li>
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-instagram"></i></a></li>
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-google-plus"></i></a></li>
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-behance"></i></a></li>
+                    <li class="d-inline-block ml-1 mr-1"><a href="#" class="text-dark"><i class="fa fa-dribbble"></i></a></li>
+                </ul>
+
+            </div>
+
+            <!--
+              All the links in the footer should remain intact.
+              You may remove the links only if you donate:
+              https://www.wowthemes.net/freebies-license/
+            -->
+            <p>
+                ©  <span class="credits font-weight-bold">
+                    <a target="_blank" class="text-dark" href="https://www.wowthemes.net/pintereso-free-html-bootstrap-template/"><u>Pintereso Bootstrap HTML Template</u> by WowThemes.net.</a>
+                </span>
+            </p>
+
+
+        </div>
+
+    </footer>
+</body>
+
+</html>
