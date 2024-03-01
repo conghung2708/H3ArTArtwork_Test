@@ -43,7 +43,7 @@ namespace H3ArTArtwork.Areas.Admin.Controllers
             var orderHeaderFromDb = _unitOfWork.OrderHeaderObj.Get(u => u.Id == OrderVM.orderHeader.Id);
             orderHeaderFromDb.name = OrderVM.orderHeader.name;
             orderHeaderFromDb.phoneNumber = OrderVM.orderHeader.phoneNumber;
-         
+
             _unitOfWork.OrderHeaderObj.Update(orderHeaderFromDb);
             _unitOfWork.Save();
 
@@ -69,7 +69,7 @@ namespace H3ArTArtwork.Areas.Admin.Controllers
         {
             var orderHeaderFromDb = _unitOfWork.OrderHeaderObj.Get(u => u.Id == OrderVM.orderHeader.Id);
             orderHeaderFromDb.orderStatus = SD.StatusDone;
-    
+
             _unitOfWork.OrderHeaderObj.Update(orderHeaderFromDb);
             _unitOfWork.Save();
             TempData["Success"] = "Order Shipped Sucessfully";
@@ -84,6 +84,7 @@ namespace H3ArTArtwork.Areas.Admin.Controllers
         {
             var orderHeaderFromDb = _unitOfWork.OrderHeaderObj.Get(u => u.Id == OrderVM.orderHeader.Id);
 
+
             if (orderHeaderFromDb.paymentStatus == SD.PaymentStatusApproved)
             {
                 var options = new RefundCreateOptions
@@ -93,11 +94,24 @@ namespace H3ArTArtwork.Areas.Admin.Controllers
                 };
                 var service = new RefundService();
                 Refund refund = service.Create(options);
+
                 _unitOfWork.OrderHeaderObj.UpdateStatus(orderHeaderFromDb.Id, SD.StatusCancelled, SD.StatusRefunded);
             }
             else
             {
                 _unitOfWork.OrderHeaderObj.UpdateStatus(orderHeaderFromDb.Id, SD.StatusCancelled, SD.StatusCancelled);
+            }
+            var orderDetails = _unitOfWork.OrderDetailObj.GetAll(u => u.orderHeaderId == orderHeaderFromDb.Id, includeProperties: "artwork");
+
+            // Set the isBought property of artwork to false for all items in this order
+            foreach (var orderDetail in orderDetails)
+            {
+                // Fetch the associated artwork for this order detail
+
+                // Update the isBought property to false
+                orderDetail.artwork.isBought = false;
+                _unitOfWork.ArtworkObj.Update(orderDetail.artwork);
+
             }
             _unitOfWork.Save();
             TempData["Success"] = "Order Cancelled Sucessfully";
@@ -120,7 +134,7 @@ namespace H3ArTArtwork.Areas.Admin.Controllers
                 var claimsIdentity = (ClaimsIdentity)User.Identity;
                 var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-                orderHeaderList = _unitOfWork.OrderHeaderObj.GetAll(u => u.applicationUserId == userId);
+                orderHeaderList = _unitOfWork.OrderHeaderObj.GetAll(u => u.applicationUserId == userId, includeProperties: "applicationUser");
             }
             switch (status)
             {

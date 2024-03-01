@@ -31,7 +31,14 @@ builder.Services.AddAuthentication().AddFacebook(option =>
     option.AppId = "2212394772452011";
     option.AppSecret = "30a380a6edd236d23aaf52d7b222cb5d";
 });
-
+//add session
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(100);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddRazorPages();
 //adding UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -53,6 +60,7 @@ StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey"
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",

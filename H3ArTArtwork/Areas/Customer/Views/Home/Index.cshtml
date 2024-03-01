@@ -21,7 +21,7 @@
     <script type="text/javascript">(function () { var css = document.createElement('link'); css.href = 'https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'; css.rel = 'stylesheet'; css.type = 'text/css'; document.getElementsByTagName('head')[0].appendChild(css); })();</script>
     <link href="~/css/app.css" rel="stylesheet" />
     <link href="~/css/theme.css" rel="stylesheet" />
-    
+
 </head>
 
 
@@ -40,11 +40,13 @@
                         </button>
                         <div class="collapse navbar-collapse" id="navbarsExplore">
                             <ul class="navbar-nav">
+
                                 @foreach (var category in distinctCategories.Take(4))
                                 {
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#">@category</a>
-                                </li>
+
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#">@category</a>
+                                    </li>
                                 }
                                 @if (distinctCategories.Count() > 4)
                                 {
@@ -53,7 +55,7 @@
                                         <div class="dropdown-menu shadow-lg" aria-labelledby="dropdown01">
                                             @foreach (var category in distinctCategories.Skip(4))
                                             {
-                                            <a class="dropdown-item" href="#">@category</a>
+                                                <a class="dropdown-item" href="#">@category</a>
                                             }
                                         </div>
                                     </li>
@@ -66,20 +68,22 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="card-columns">
-                        @foreach(var artwork in Model)
+                        @foreach (var artwork in Model)
                         {
-                            
-                        <div class="card card-pin">
-                            <img class="card-img" src="@artwork.imageUrl" alt="Card image">
-                            <div class="overlay">
-                                <h2 class="card-title title">@artwork.title</h2>
-                                <div class="more">
-                                    <a asp-action="Details" asp-route-artworkId="@artwork.artworkId">
-                                        <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> More
-                                    </a>
+                            @if (!artwork.isBought)
+                            {
+                                <div class="card card-pin">
+                                    <img class="card-img" src="@artwork.imageUrl" alt="Card image">
+                                    <div class="overlay">
+                                        <h2 class="card-title title">@artwork.title</h2>
+                                        <div class="more">
+                                            <a asp-action="Details" asp-route-artworkId="@artwork.artworkId">
+                                                <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> More
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            }
                         }
                     </div>
                 </div>

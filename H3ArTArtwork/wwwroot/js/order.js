@@ -18,7 +18,7 @@ $(document).ready(function () {
     else {
         loadDataTable("all");
     }
-   
+
 });
 
 function loadDataTable(status) {

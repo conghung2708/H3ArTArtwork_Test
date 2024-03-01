@@ -8,54 +8,54 @@
 
     namespace H3ArTArtwork.Areas.Creator.Controllers
     {
-        [Area("Creator")]
-        public class ArtworkController : Controller
+    [Area("Creator")]
+    public class ArtworkController : Controller
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public ArtworkController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
-            private readonly IUnitOfWork _unitOfWork;
-            private readonly IWebHostEnvironment _webHostEnvironment;
-            public ArtworkController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
-            {
-                _unitOfWork = unitOfWork;
-                _webHostEnvironment = webHostEnvironment;
-            }
-            public IActionResult Index()
-            {
-                //get the id
-          
-                return View();
-            }
+            _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
+        }
+        public IActionResult Index()
+        {
+            //get the id
 
-            public IActionResult Upsert(int? id)
-            {
+            return View();
+        }
 
-                ArtworkVM artworkVM = new()
+        public IActionResult Upsert(int? id)
+        {
+
+            ArtworkVM artworkVM = new()
+            {
+                categoryList = _unitOfWork.CategoryObj.GetAll().Select(u => new SelectListItem
                 {
-                    categoryList = _unitOfWork.CategoryObj.GetAll().Select(u => new SelectListItem
-                    {
-                        Text = u.categoryName,
-                        Value = u.categoryId.ToString(),
-                    }),
-                    artwork = new Artwork()
-                };
+                    Text = u.categoryName,
+                    Value = u.categoryId.ToString(),
+                }),
+                artwork = new Artwork()
+            };
 
-                if (id == null || id == 0)
-                {
+            if (id == null || id == 0)
+            {
                 //create
                 var claimsIdentity = (ClaimsIdentity)User.Identity;
                 var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
                 artworkVM.artwork.artistID = userId;
                 artworkVM.artwork.applicationUser = _unitOfWork.ApplicationUserObj.Get(u => u.Id == userId);
-                
-                return View(artworkVM);
-                }
-                else
-                {
-                    //update
-                    artworkVM.artwork = _unitOfWork.ArtworkObj.Get(u => u.artworkId == id, includeProperties: "category,applicationUser");
-                    return View(artworkVM);
-                }
 
+                return View(artworkVM);
             }
+            else
+            {
+                //update
+                artworkVM.artwork = _unitOfWork.ArtworkObj.Get(u => u.artworkId == id, includeProperties: "category,applicationUser");
+                return View(artworkVM);
+            }
+
+        }
 
         [HttpPost]
         public IActionResult Upsert(ArtworkVM artworkVM, IFormFile? file)
@@ -68,7 +68,7 @@
                 if (ModelState.IsValid)
                 {
                     string wwwRootPath = _webHostEnvironment.WebRootPath;
-                    
+
                     if (file != null)
                     {
                         string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -93,7 +93,7 @@
                     }
                     if (artworkVM.artwork.artworkId == 0)
                     {
-               
+
                         // Add product
                         _unitOfWork.ArtworkObj.Add(artworkVM.artwork);
                         _unitOfWork.Save();
@@ -138,40 +138,40 @@
 
         #region API CALLS
         [HttpGet]
-            public IActionResult GetAll()
-            {
+        public IActionResult GetAll()
+        {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            List<Artwork> artworkList = _unitOfWork.ArtworkObj.GetAll(u => u.artistID == userId,includeProperties: "category,applicationUser").ToList();
-                return Json(new { data = artworkList });
-            }
-
-            [HttpDelete]
-            public IActionResult Delete(int? id)
-            {
-                var productToBeDeleted = _unitOfWork.ArtworkObj.Get(u => u.artworkId == id);
-                if (productToBeDeleted == null)
-                {
-                    return Json(new { success = false, message = "Error during deleting" });
-                }
-
-                if (!string.IsNullOrEmpty(productToBeDeleted.imageUrl))
-                {
-                    var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, productToBeDeleted.imageUrl.TrimStart('\\'));
-                    if (System.IO.File.Exists(oldImagePath))
-                    {
-                        System.IO.File.Delete(oldImagePath);
-                    }
-                }
-
-                _unitOfWork.ArtworkObj.Remove(productToBeDeleted);
-                _unitOfWork.Save();
-
-                List<Artwork> listProduct = _unitOfWork.ArtworkObj.GetAll(includeProperties: "category,applicationUser").ToList();
-                return Json(new { success = true, message = "Delete Successful" });
-            }
-            #endregion
-
+            List<Artwork> artworkList = _unitOfWork.ArtworkObj.GetAll(u => u.artistID == userId, includeProperties: "category,applicationUser").ToList();
+            return Json(new { data = artworkList });
         }
+
+        [HttpDelete]
+        public IActionResult Delete(int? id)
+        {
+            var productToBeDeleted = _unitOfWork.ArtworkObj.Get(u => u.artworkId == id);
+            if (productToBeDeleted == null)
+            {
+                return Json(new { success = false, message = "Error during deleting" });
+            }
+
+            if (!string.IsNullOrEmpty(productToBeDeleted.imageUrl))
+            {
+                var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, productToBeDeleted.imageUrl.TrimStart('\\'));
+                if (System.IO.File.Exists(oldImagePath))
+                {
+                    System.IO.File.Delete(oldImagePath);
+                }
+            }
+
+            _unitOfWork.ArtworkObj.Remove(productToBeDeleted);
+            _unitOfWork.Save();
+
+            List<Artwork> listProduct = _unitOfWork.ArtworkObj.GetAll(includeProperties: "category,applicationUser").ToList();
+            return Json(new { success = true, message = "Delete Successful" });
+        }
+        #endregion
+
     }
+}

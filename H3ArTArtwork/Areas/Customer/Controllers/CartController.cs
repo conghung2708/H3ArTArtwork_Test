@@ -10,39 +10,40 @@ using System.Security.Claims;
 
 namespace H3ArTArtwork.Areas.Customer.Controllers
 {
-	[Area("Customer")]
+
+    [Area("Customer")]
     [Authorize(Roles = "Customer, Creator")]
     public class CartController : Controller
-	{
-		private readonly IUnitOfWork _unitOfWork;
-		[BindProperty]
-		public ShoppingCartVM ShoppingCartVM { get; set; }
-		public CartController(IUnitOfWork unitOfWork)
-		{
-			_unitOfWork = unitOfWork;
-		}
-		public IActionResult Index()
-		{
-			//get the id
-			var claimsIdentity = (ClaimsIdentity)User.Identity;
-			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        [BindProperty]
+        public ShoppingCartVM ShoppingCartVM { get; set; }
+        public CartController(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+        public IActionResult Index()
+        {
+            //get the id
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-			ShoppingCartVM = new()
-			{
-				ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork"),
-				orderHeader = new()
-			};
-			foreach (var cart in ShoppingCartVM.ShoppingCartList)
-			{
-				cart.price = cart.artwork.price;
-				ShoppingCartVM.orderHeader.orderTotal += cart.price;
-			}
-			return View(ShoppingCartVM);
-		}
+            ShoppingCartVM = new()
+            {
+                ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork"),
+                orderHeader = new()
+            };
+            foreach (var cart in ShoppingCartVM.ShoppingCartList)
+            {
+                cart.price = cart.artwork.price;
+                ShoppingCartVM.orderHeader.orderTotal += cart.price;
+            }
+            return View(ShoppingCartVM);
+        }
 
         public IActionResult Remove(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCartObj.Get(u => u.shoppingCartId == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCartObj.Get(u => u.shoppingCartId == cartId, tracked: true);
 
             // Fetch the associated orderHeaderId using userId or any other relevant information
             var userId = cartFromDb.buyerID;
@@ -51,8 +52,7 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
             if (orderHeader != null)
             {
                 // Remove associated OrderDetail record
-                var orderDetail = _unitOfWork.OrderDetailObj.Get(od => od.artworkId == cartFromDb.artworkID
-                                                                                  && od.orderHeaderId == orderHeader.Id);
+                var orderDetail = _unitOfWork.OrderDetailObj.Get(od => od.artworkId == cartFromDb.artworkID && od.orderHeaderId == orderHeader.Id);
                 if (orderDetail != null)
                 {
                     _unitOfWork.OrderDetailObj.Remove(orderDetail);
@@ -60,6 +60,8 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
             }
 
             _unitOfWork.ShoppingCartObj.Remove(cartFromDb);
+            //Remove from session
+            HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == cartFromDb.buyerID).Count() - 1);
 
             _unitOfWork.Save();
 
@@ -67,64 +69,71 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
         }
 
         public IActionResult Summary()
-		{
-			//get the id
-			var claimsIdentity = (ClaimsIdentity)User.Identity;
-			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+        {
+            //get the id
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-			ShoppingCartVM = new()
-			{
-				ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork"),
-				orderHeader = new()
-			};
-			ShoppingCartVM.orderHeader.applicationUser = _unitOfWork.ApplicationUserObj.Get(u => u.Id == userId);
+            ShoppingCartVM = new()
+            {
+                ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork"),
+                orderHeader = new()
+            };
+            ShoppingCartVM.orderHeader.applicationUser = _unitOfWork.ApplicationUserObj.Get(u => u.Id == userId);
 
-			ShoppingCartVM.orderHeader.name = ShoppingCartVM.orderHeader.applicationUser.FullName;
-			ShoppingCartVM.orderHeader.phoneNumber = ShoppingCartVM.orderHeader.applicationUser.PhoneNumber;
-			foreach (var cart in ShoppingCartVM.ShoppingCartList)
-			{
-				cart.price = cart.artwork.price;
-				ShoppingCartVM.orderHeader.orderTotal += cart.price;
-			}
-			return View(ShoppingCartVM);
-		}
+            ShoppingCartVM.orderHeader.name = ShoppingCartVM.orderHeader.applicationUser.FullName;
+            ShoppingCartVM.orderHeader.phoneNumber = ShoppingCartVM.orderHeader.applicationUser.PhoneNumber;
+            foreach (var cart in ShoppingCartVM.ShoppingCartList)
+            {
+                cart.price = cart.artwork.price;
+                ShoppingCartVM.orderHeader.orderTotal += cart.price;
+            }
+            return View(ShoppingCartVM);
+        }
 
-		[HttpPost]
-		[ActionName("Summary")]
-		public IActionResult SummaryPOST()
-		{
-			//get the id
-			var claimsIdentity = (ClaimsIdentity)User.Identity;
-			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+        [HttpPost]
+        [ActionName("Summary")]
+        public IActionResult SummaryPOST()
+        {
+            //get the id
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-			//ShoppingCartVM will automatically be populated
-
-
-			ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork");
+            //ShoppingCartVM will automatically be populated
 
 
-			ApplicationUser applicationUser = _unitOfWork.ApplicationUserObj.Get(u => u.Id == userId);
-
-			ShoppingCartVM.orderHeader.orderDate = System.DateTime.Now;
-			ShoppingCartVM.orderHeader.applicationUserId = userId;
+            ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId, includeProperties: "artwork");
 
 
-			foreach (var cart in ShoppingCartVM.ShoppingCartList)
-			{
-				cart.price = cart.artwork.price;
-				ShoppingCartVM.orderHeader.orderTotal += cart.price;
-			}
-			if (!ModelState.IsValid)
-			{
+            ApplicationUser applicationUser = _unitOfWork.ApplicationUserObj.Get(u => u.Id == userId);
+
+            ShoppingCartVM.orderHeader.orderDate = System.DateTime.Now;
+            ShoppingCartVM.orderHeader.applicationUserId = userId;
+
+
+            foreach (var cart in ShoppingCartVM.ShoppingCartList)
+            {
+
+                cart.price = cart.artwork.price;
+                ShoppingCartVM.orderHeader.orderTotal += cart.price;
+                if (cart.artwork.isBought)
+                {
+                    // Add model error if artwork is already bought
+                    ModelState.AddModelError("", $"The artwork '{cart.artwork.title}' has already been purchased.");
+                    return View(ShoppingCartVM); // or any other suitable action result
+                }
+            }
+            if (!ModelState.IsValid)
+            {
                 // If model state is not valid, return the view with validation errors
                 return View(ShoppingCartVM); // or any other suitable action result
-			}
+            }
             var existingOrder = _unitOfWork.OrderHeaderObj.Get(o => o.applicationUserId == userId && o.paymentStatus == SD.PaymentStatusPending);
 
-			if (existingOrder != null)
-			{
-				ShoppingCartVM.orderHeader = existingOrder;
-				_unitOfWork.OrderHeaderObj.Update(existingOrder);
+            if (existingOrder != null)
+            {
+                ShoppingCartVM.orderHeader = existingOrder;
+                _unitOfWork.OrderHeaderObj.Update(existingOrder);
                 _unitOfWork.Save();
                 var newShoppingCartItems = ShoppingCartVM.ShoppingCartList.Where(cart => cart.isNew);
 
@@ -144,12 +153,12 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
                 }
             }
             else
-			{ 
-				//it is a regular customer account
-				ShoppingCartVM.orderHeader.paymentStatus = SD.PaymentStatusPending;
-				ShoppingCartVM.orderHeader.orderStatus = SD.StatusPending;
+            {
+                //it is a regular customer account
+                ShoppingCartVM.orderHeader.paymentStatus = SD.PaymentStatusPending;
+                ShoppingCartVM.orderHeader.orderStatus = SD.StatusPending;
 
-				_unitOfWork.OrderHeaderObj.Add(ShoppingCartVM.orderHeader);
+                _unitOfWork.OrderHeaderObj.Add(ShoppingCartVM.orderHeader);
                 _unitOfWork.Save();
                 foreach (var cart in ShoppingCartVM.ShoppingCartList)
                 {
@@ -167,8 +176,8 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
                 }
 
             }
-			//stripe logic
-			var domain = "https://localhost:7034/";
+            //stripe logic
+            var domain = "https://localhost:7034/";
             var options = new SessionCreateOptions
             {
                 SuccessUrl = domain + $"customer/cart/OrderConfirmation?id={ShoppingCartVM.orderHeader.Id}",
@@ -200,29 +209,36 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
             _unitOfWork.Save();
             Response.Headers.Add("Location", session.Url);
             return new StatusCodeResult(303);
-		}
+        }
 
-		public IActionResult OrderConfirmation(int id)
-		{
+        public IActionResult OrderConfirmation(int id)
+        {
             OrderHeader orderHeader = _unitOfWork.OrderHeaderObj.Get(u => u.Id == id, includeProperties: "applicationUser");
-           
-                //this is an order by customer
-                var service = new SessionService();
-                Session session = service.Get(orderHeader.sessionId);
+            List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == orderHeader.applicationUserId, includeProperties: "artwork").ToList();
+            //this is an order by customer
+            var service = new SessionService();
+            Session session = service.Get(orderHeader.sessionId);
 
-                if (session.PaymentStatus.ToLower() == "paid")
+            if (session.PaymentStatus.ToLower() == "paid")
+            {
+                _unitOfWork.OrderHeaderObj.UpdateStripePaymentId(id, session.Id, session.PaymentIntentId);
+                _unitOfWork.OrderHeaderObj.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
+                _unitOfWork.Save();
+
+                foreach (var cartItem in shoppingCarts)
                 {
-                    _unitOfWork.OrderHeaderObj.UpdateStripePaymentId(id, session.Id, session.PaymentIntentId);
-                    _unitOfWork.OrderHeaderObj.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
-                    _unitOfWork.Save();
+                    cartItem.artwork.isBought = true;
+                    _unitOfWork.ArtworkObj.Update(cartItem.artwork);
                 }
-             
-            
-            List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == orderHeader.applicationUserId).ToList();
+                _unitOfWork.Save();
+            }
+
+            HttpContext.Session.Clear();
+
             _unitOfWork.ShoppingCartObj.RemoveRange(shoppingCarts);
             _unitOfWork.Save();
             return View(id);
         }
 
-	}
+    }
 }

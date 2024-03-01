@@ -34,5 +34,6 @@ namespace H3ArT.Models.Models
         [ForeignKey("categoryID")]
         [ValidateNever]
         public Category category { get; set; }
+        public bool isBought { get; set; }
     }
 }

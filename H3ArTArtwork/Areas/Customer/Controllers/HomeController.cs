@@ -58,7 +58,7 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
             shoppingCart.artistID = artwork.artistID;
             shoppingCart.isNew = true;
 
-            ShoppingCart cartFromDb = _unitOfWork.ShoppingCartObj.Get(u => u.buyerID == userId && u.artworkID == shoppingCart.artworkID);   
+            ShoppingCart cartFromDb = _unitOfWork.ShoppingCartObj.Get(u => u.buyerID == userId && u.artworkID == shoppingCart.artworkID);
             if (cartFromDb != null)
             {
                 //cartFromDb.Count += shoppingCart.Count;
@@ -72,9 +72,11 @@ namespace H3ArTArtwork.Areas.Customer.Controllers
             {
                 //add cart record
                 _unitOfWork.ShoppingCartObj.Add(shoppingCart);
-               
                 _unitOfWork.Save();
-              
+                //add the cart value to session
+                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCartObj.GetAll(u => u.buyerID == userId).Count()); //Count the distinct item that user has
+
+
             }
 
             TempData["success"] = "Cart updated successfully";

@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -29,9 +31,12 @@
                         @if (User.IsInRole(SD.Role_Creator))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="Creator" asp-controller="Artwork" asp-action="Index">Artwork</a>
+                                <a class="nav-link text-dark" asp-area="Creator" asp-controller="Artwork" asp-action="Index">Artwork</a>
                             </li>
                         }
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="Admin" asp-controller="Order" asp-action="Index">Manage Order</a>
+                        </li>
                         @if (User.IsInRole(SD.Role_Admin))
                         {
                             <li class="nav-item dropdown">
@@ -42,9 +47,7 @@
                                     <li class="nav-item">
                                         <a class="dropdown-item" asp-area="Admin" asp-controller="Category" asp-action="Index">Category</a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Order" asp-action="Index">Manage Order</a>
-                                    </li>
+
 
                                     <li class="nav-item">
                                         <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Create a User</a>
@@ -57,10 +60,12 @@
                                 </ul>
                             </li>
                         }
-                        @if (User.IsInRole(SD.Role_Creator) || User.IsInRole(SD.Role_Customer))
+                        @if (!User.IsInRole(SD.Role_Admin) || User.IsInRole(SD.Role_Moderator))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="Customer" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart"></i> &nbsp; (0)</a>                       
+                                <a class="nav-link" asp-area="Customer" asp-controller="Cart" asp-action="Index">
+                                    @await Component.InvokeAsync("ShoppingCart")
+                                </a>
                             </li>
                         }
                     </ul>
@@ -75,15 +80,13 @@
     @RenderBody()
 
 
- 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js" asp-append-version="true"></script>
-
-    <script src="https://cdn.tiny.cloud/1/k8u7g6xo882rqvrqy150cuio2mdchpli6vqjaf8nxjadticy/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script></script>
+    <script src="https://cdn.tiny.cloud/1/g28lhnxtlihu4l4a381gw7tz47voznshwbi10lmsvlekrfme/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

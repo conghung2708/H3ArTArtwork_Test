@@ -19,7 +19,7 @@
 
 <body>
 
-   
+
     <main role="main">
 
 
@@ -35,24 +35,27 @@
                                 </h1>
                                 <p style="font-size: smaller; text-align: center;">Artist: @Model.artwork.applicationUser.FullName</p>
                                 <p>
-                                   @Html.Raw(@Model.artwork.description)
+                                    @Html.Raw(@Model.artwork.description)
                                 </p>
-                                <div class="fs-5 mb-5">
-                                    
-                                    <span>Price: @Model.artwork.price.ToString("C", CultureInfo.CreateSpecificCulture("en-US"))</span>
-                                </div>
-                                <form method="post">
-                                    <input asp-for="artworkID" hidden/>
-                                    @if (!User.IsInRole(SD.Role_Admin) && !User.IsInRole(SD.Role_Moderator))
-                                    {
-                                        <button type="submit"
-                                        class="btn btn-primary bg-gradient w-100 py-2 text-uppercase fw-semibold">
-                                            Add to Cart
-                                        </button>
-                                    }
+                                @if (Model.artwork.isPremium)
+                                {
+                                    <div class="fs-5 mb-5">
 
-                                </form>
-                              
+                                        <span>Price: @Model.artwork.price.ToString("C", CultureInfo.CreateSpecificCulture("en-US"))</span>
+                                    </div>
+                                    <form method="post">
+                                        <input asp-for="artworkID" hidden />
+                                        @if (!User.IsInRole(SD.Role_Admin) && !User.IsInRole(SD.Role_Moderator))
+                                        {
+
+                                            <button type="submit"
+                                                    class="btn btn-primary bg-gradient w-100 py-2 text-uppercase fw-semibold">
+                                                Add to Cart
+                                            </button>
+                                        }
+
+                                    </form>
+                                }
                                 @* <small class="d-block"><a class="btn btn-sm btn-gray200" href="#"><i class="fa fa-external-link"></i> Visit Website</a></small> *@
                                 <!-- Begin Comments -replace demowebsite with your own id
                                 ================================================== -->
@@ -90,17 +93,17 @@
 
                         @foreach (var artwork in randomArtworks)
                         {
-                        <div class="card card-pin">
-                            <img class="card-img" src="@artwork.imageUrl" alt="Card image">
-                            <div class="overlay">
+                            <div class="card card-pin">
+                                <img class="card-img" src="@artwork.imageUrl" alt="Card image">
+                                <div class="overlay">
                                     <h2 class="card-title title">@artwork.title</h2>
-                                <div class="more">
+                                    <div class="more">
                                         <a asp-action="Details" asp-route-artworkId="@artwork.artworkId">
                                             <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i> More
                                         </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         }
 
                     </div>
